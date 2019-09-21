@@ -1,0 +1,2 @@
+include ':app', ':ioc-api', ':ioc', ':annotation'
+rootProject.name='flutter_channel_annotation'
