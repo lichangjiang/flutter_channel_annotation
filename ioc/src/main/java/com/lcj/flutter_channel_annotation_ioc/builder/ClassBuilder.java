@@ -16,6 +16,8 @@ public interface ClassBuilder extends Builder{
     ClassBuilder isFinal();
     ClassBuilder isStatic();
     ClassBuilder modifier(Modifier modifier);
+    ClassBuilder addField(FieldBuilder field);
+    ClassBuilder addMethod(MethodBuilder method);
     FieldBuilder addField(String name);
     MethodBuilder addMethod(String name);
 }
