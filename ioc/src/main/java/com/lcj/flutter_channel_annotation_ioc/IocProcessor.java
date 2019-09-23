@@ -157,7 +157,7 @@ public class IocProcessor extends AbstractProcessor {
             Parameter parameter = e.getAnnotation(Parameter.class);
             TypeElement typeElement = (TypeElement) mTypesUtils.asElement(e.asType());
             ParameterInfo p = new ParameterInfo(
-                    parameter.key(),
+                    parameter.value(),
                     typeElement.getQualifiedName().toString()
             );
             asyncMethodInfo.addParameterInfo(p);

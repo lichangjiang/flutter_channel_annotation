@@ -100,7 +100,7 @@ public class MethodChannelHandlerUtil {
     }
 
     private static void createRegisterMethod(ClassBuilder clazz, String proxyClassName) {
-        clazz.addMethod("registerWidth")
+        clazz.addMethod("registerWith")
                 .isStatic().modifier(ClassBuilder.Modifier.PUBLIC).returnType("void")
                 .addArgument("registry").type("PluginRegistry").end()
                 .addStatement("if (!registry.hasPlugin(PLUGIN_NAME)) {")
@@ -118,7 +118,7 @@ public class MethodChannelHandlerUtil {
 
         if (methodInfos != null) {
             for (MethodInfo info : methodInfos) {
-                method.addStatement("\tcase " + info.getMethodName() + ":")
+                method.addStatement("\tcase \"" + info.getMethodName() + "\":")
                         .addStatement("\t\tdelegate." + info.getMethodName() + "(call,result);")
                         .addStatement("\t\tbreak;");
             }
@@ -126,7 +126,7 @@ public class MethodChannelHandlerUtil {
 
         if (asyncMethodInfos != null) {
             for (AsyncMethodInfo info : asyncMethodInfos) {
-                method.addStatement("\tcase " + info.getMethodName() + ":")
+                method.addStatement("\tcase \"" + info.getMethodName() + "\":")
                         .addStatement(createAsyncTaskTemple(info))
                         .addStatement("\t\tbreak;");
             }
@@ -140,9 +140,9 @@ public class MethodChannelHandlerUtil {
 
 
     private static String createAsyncTaskTemple(AsyncMethodInfo info) {
-        String asyncTask = "\t\tAsyncTask task = new AsyncTask<Void,Void," + (info.getReturnType().isEmpty() ? "Void" : info.getReturnType()) + ">() {\n"
+        String asyncTask = "\t\tAsyncTask task = new AsyncTask<Object,Void," + (info.getReturnType().isEmpty() ? "Void" : info.getReturnType()) + ">() {\n"
                 + "\t\t\t\t\t\t\t@Override\n"
-                + "\t\t\t\t\t\t\tprotected " + info.getReturnType() + " doInBackground(Void... voids) {\n"
+                + "\t\t\t\t\t\t\tprotected " + info.getReturnType() + " doInBackground(Object... voids) {\n"
                 + "\t\t\t\t\t\t\t\tMap<String,Object> map = (Map<String,Object>) call.arguments;\n";
 
         int index = 0;
@@ -151,12 +151,13 @@ public class MethodChannelHandlerUtil {
             index++;
         }
 
-        asyncTask = asyncTask + "\t\t\t\t\t\t\t\tdelegate." + info.getMethodName() + "(";
+        asyncTask = asyncTask + "\t\t\t\t\t\t\t\treturn delegate." + info.getMethodName() + "(";
         for (int i = 0; i < index; i++) {
             asyncTask = asyncTask + "p" + i;
             if (i < index - 1) asyncTask = asyncTask + ",";
         }
         asyncTask = asyncTask + ");\n";
+        asyncTask = asyncTask +"\t\t\t\t\t\t\t}\n";
         asyncTask = asyncTask + "\t\t\t\t\t\t\t@Override\n";
         asyncTask = asyncTask + "\t\t\t\t\t\t\tprotected void onPostExecute(" + info.getReturnType() +" o) {\n";
         asyncTask = asyncTask + "\t\t\t\t\t\t\t\tif (result != null) result.success(delegate." + info.getCallback() + "(o));\n";

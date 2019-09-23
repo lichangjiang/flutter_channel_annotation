@@ -77,7 +77,6 @@ public class DefaultMethodBuilder implements MethodBuilder {
     public String create() {
         StringBuilder sb = new StringBuilder("\t\t");
         if (isFinal) sb.append("final ");
-        if (isStatic) sb.append("static ");
         switch (mModifier) {
             case PUBLIC:
                 sb.append("public ");
@@ -92,6 +91,8 @@ public class DefaultMethodBuilder implements MethodBuilder {
             default:
                 break;
         }
+
+        if (isStatic) sb.append("static ");
         sb.append(mReturnType + " ");
         sb.append(mName + "(");
         for (int i = 0;i < mArgumenSet.size();i++) {
