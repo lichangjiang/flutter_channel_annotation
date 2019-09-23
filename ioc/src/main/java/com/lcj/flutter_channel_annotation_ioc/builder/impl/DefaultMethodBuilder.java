@@ -13,8 +13,8 @@ public class DefaultMethodBuilder implements MethodBuilder {
     private boolean isFinal;
     private boolean isStatic;
     private ClassBuilder.Modifier mModifier;
-    private String mReturnType;
-    private String mName;
+    private String mReturnType = "";
+    private String mName = "";
     private List<ArgumentBuilder> mArgumenSet = new ArrayList<>();
     private List<String> mStatementList = new ArrayList<>();
 

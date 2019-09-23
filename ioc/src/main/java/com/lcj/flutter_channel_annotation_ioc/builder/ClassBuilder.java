@@ -10,6 +10,8 @@ public interface ClassBuilder extends Builder{
         PUBLIC,PROTECTED,PRIVATE,DEFAULT
     }
 
+    ClassBuilder extend(String superclass);
+    ClassBuilder implement(String interfaces);
     ClassBuilder addPackage(String pkg);
     ClassBuilder addImport(String imp);
     ClassBuilder name(String name);

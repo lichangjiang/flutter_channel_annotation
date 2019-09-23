@@ -16,6 +16,20 @@ public class DefaultClassBuilder implements ClassBuilder {
     private Set<String> mImportSet = new HashSet<>();
     private Set<FieldBuilder> mFieldSet = new HashSet<>();
     private Set<MethodBuilder> mMethodSet = new HashSet<>();
+    private Set<String> mInterfaces = new HashSet<>();
+    private String mSuperClass;
+
+    @Override
+    public ClassBuilder extend(String superclass) {
+        if (mSuperClass == null || mSuperClass.isEmpty()) mSuperClass = superclass;
+        return this;
+    }
+
+    @Override
+    public ClassBuilder implement(String interfaces) {
+        mInterfaces.add(interfaces);
+        return this;
+    }
 
     @Override
     public ClassBuilder addPackage(String pkg) {
@@ -96,7 +110,21 @@ public class DefaultClassBuilder implements ClassBuilder {
 
         if (isStatic) sb.append("static ");
         sb.append("class ");
-        sb.append(mName + " {\n");
+        sb.append(mName + " ");
+
+        if (mSuperClass != null && !mSuperClass.isEmpty())
+            sb.append("extends " + mSuperClass + " ");
+
+        if (mInterfaces.size() > 0)
+            sb.append("implements ");
+
+        int index = 0;
+        for (String i : mInterfaces) {
+            sb.append(i);
+            if (index < mInterfaces.size() - 1) sb.append(",");
+        }
+
+        sb.append(" {\n");
 
         for (FieldBuilder field : mFieldSet) {
             sb.append(field.create());

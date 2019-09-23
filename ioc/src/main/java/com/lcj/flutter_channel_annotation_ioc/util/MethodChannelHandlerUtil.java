@@ -1,66 +1,30 @@
 package com.lcj.flutter_channel_annotation_ioc.util;
 
 
+import com.lcj.flutter_channel_annotation_ioc.builder.ClassBuilder;
+import com.lcj.flutter_channel_annotation_ioc.builder.MethodBuilder;
+import com.lcj.flutter_channel_annotation_ioc.builder.impl.DefaultClassBuilder;
+import com.lcj.flutter_channel_annotation_ioc.model.AsyncMethodInfo;
 import com.lcj.flutter_channel_annotation_ioc.model.MethodInfo;
+import com.lcj.flutter_channel_annotation_ioc.model.ParameterInfo;
 
 import java.util.Set;
-import java.util.regex.Matcher;
+
+import static com.lcj.flutter_channel_annotation_ioc.builder.ClassBuilder.STRING;
 
 public class MethodChannelHandlerUtil {
 
-    public final static String IMPORT_METHOD_CHANNEL = "import io.flutter.plugin.common.MethodChannel;\n";
-    public final static String IMPORT_METHOD_CALL = "import io.flutter.plugin.common.MethodCall;\n";
-    public final static String IMPORT_PLUGIN_RRGISTRY = "import io.flutter.plugin.common.PluginRegistry;\n";
-
-    public final static String CLASS_NAME = "CLASS_NAME";
-    public final static String METHOD_NAME = "METHOD_NAME";
-    public final static String CASE_BLOCK = "CASE_BLOCK";
-    public final static String METHOD_CHANNEL_NAME = "METHOD_CHANNEL_NAME";
-    public final static String CASE_NAME = "CASE_NAME";
-    public final static String PLIGIN_NAME = "PLUGIN_NAME_VALUE";
-    public final static String TARGET_CLASS = "TARGET_CLASS";
-    public final static String INSERT_CHANNEL = "INSERT_CHANNEL";
-
-
-    public final static String HANDLER_TEMPLATE = "public class CLASS_NAME implements MethodChannel.MethodCallHandler {\n"
-            + "\tprivate final static String PLUGIN_NAME = \"PLUGIN_NAME_VALUE\";\n"
-            + "\tprivate final static String METHOD_CHANNEL = \"METHOD_CHANNEL_NAME\";\n"
-            + "\tprivate MethodChannel channel;\n"
-            + "\tprivate TARGET_CLASS delegate;\n"
-            + "\tpublic CLASS_NAME(MethodChannel channel) {\n"
-            + "\t\tthis.channel = channel;\n"
-            + "\t\tthis.delegate = new TARGET_CLASS(INSERT_CHANNEL);\n"
-            + "\t}\n"
-            + "\t@Override\n"
-            + "\tpublic void onMethodCall(MethodCall call,MethodChannel.Result result) {\n"
-            + "\t\tswitch (call.method) {\n"
-            + "CASE_BLOCK\n"
-            + "\t\t}\n"
-            + "\t}\n"
-            + "\tpublic static void registerWith(PluginRegistry registry) {\n"
-            + "\t\tif (!registry.hasPlugin(PLUGIN_NAME)) {\n"
-            + "\t\t\tfinal MethodChannel methodChannel = new MethodChannel(registry.registrarFor(PLUGIN_NAME).messenger(),METHOD_CHANNEL);\n"
-            + "\t\t\tmethodChannel.setMethodCallHandler(new CLASS_NAME(methodChannel));\n"
-            + "\t\t}\n"
-            + "\t}\n"
-            + "}";
-
-
-    public final static String ACASE = "\t\t\tcase \"CASE_NAME\":\n"
-            + "\t\t\t\tdelegate.METHOD_NAME(call,result);\n"
-            + "\t\t\t\tbreak;\n";
-
-    public final static String DEFAULT_CASE = "\t\t\tdefault:\n"
-            + "\t\t\t\tresult.notImplemented();\n"
-            + "\t\t\t\tbreak;\n";
+    public final static String IMPORT_METHOD_CHANNEL = "io.flutter.plugin.common.MethodChannel";
+    public final static String IMPORT_METHOD_CALL = "io.flutter.plugin.common.MethodCall";
+    public final static String IMPORT_PLUGIN_RRGISTRY = "io.flutter.plugin.common.PluginRegistry";
 
     private MethodChannelHandlerUtil() {
     }
 
 
-    public static String createRegisterClass(String classPath,String className,Set<String> generatedSet) {
+    public static String createRegisterClass(String classPath, String className, Set<String> generatedSet) {
         StringBuilder sb = new StringBuilder();
-        sb.append("package " + classPath +";\n");
+        sb.append("package " + classPath + ";\n");
         sb.append("import io.flutter.plugin.common.PluginRegistry;\n");
         sb.append("public class " + className + "{\n");
         sb.append("\tpublic static void registerAllHandler(PluginRegistry registry) {\n");
@@ -79,30 +43,126 @@ public class MethodChannelHandlerUtil {
                                           String methodChannelName,
                                           String classQulifiedName,
                                           Set<MethodInfo> methodInfos,
+                                          Set<AsyncMethodInfo> asyncMethodInfos,
                                           boolean needChannel) {
-        StringBuilder sb = new StringBuilder();
 
-        for (MethodInfo methodInfo : methodInfos) {
-            String acase = ACASE.replace(CASE_NAME, methodInfo.getMethodName())
-                    .replace(METHOD_NAME, methodInfo.getMethodName());
-            sb.append(acase);
+        ClassBuilder clazz = new DefaultClassBuilder()
+                .name(proxyClassName)
+                .addPackage(proxyClassPath)
+                .addImport("android.os.AsyncTask")
+                .addImport("java.lang.String")
+                .addImport("java.util.Map")
+                .addImport(IMPORT_METHOD_CALL)
+                .addImport(IMPORT_METHOD_CHANNEL)
+                .addImport(IMPORT_PLUGIN_RRGISTRY)
+                .modifier(ClassBuilder.Modifier.PUBLIC)
+                .implement("MethodChannel.MethodCallHandler")
+                .addField("PLUGIN_NAME")
+                .isFinal().isStatic().modifier(ClassBuilder.Modifier.PRIVATE).type(STRING).assign("\"" + pluginName + "\"")
+                .end()
+                .addField("METHOD_CHANNEL")
+                .isFinal().isStatic().modifier(ClassBuilder.Modifier.PRIVATE).type(STRING).assign("\"" + methodChannelName + "\"")
+                .end()
+                .addField("channel")
+                .modifier(ClassBuilder.Modifier.PRIVATE).type("MethodChannel")
+                .end()
+                .addField("delegate")
+                .type(classQulifiedName).modifier(ClassBuilder.Modifier.PRIVATE)
+                .end()
+                .addMethod(proxyClassName).modifier(ClassBuilder.Modifier.PUBLIC)
+                .addArgument("channel").type("MethodChannel").end()
+                .addStatement("this.channel = channel;")
+                .addStatement("this.delegate = new " + classQulifiedName + "(" + (needChannel ? "channel" : "") + ");")
+                .end();
+
+        createRegisterMethod(clazz, proxyClassName);
+        createHandlerMethod(clazz, methodInfos, asyncMethodInfos);
+
+        return clazz.create();
+    }
+
+
+    public static String createProxyClass(String proxyClassPath,
+                                          String proxyClassName,
+                                          String pluginName,
+                                          String methodChannelName,
+                                          String classQulifiedName,
+                                          Set<MethodInfo> methodInfos,
+                                          boolean needChannel) {
+        return createProxyClass(proxyClassPath,
+                proxyClassName,
+                pluginName,
+                methodChannelName,
+                classQulifiedName,
+                methodInfos,
+                null,
+                needChannel);
+    }
+
+    private static void createRegisterMethod(ClassBuilder clazz, String proxyClassName) {
+        clazz.addMethod("registerWidth")
+                .isStatic().modifier(ClassBuilder.Modifier.PUBLIC).returnType("void")
+                .addArgument("registry").type("PluginRegistry").end()
+                .addStatement("if (!registry.hasPlugin(PLUGIN_NAME)) {")
+                .addStatement("\tfinal MethodChannel methodChannel = new MethodChannel(registry.registrarFor(PLUGIN_NAME).messenger(),METHOD_CHANNEL);")
+                .addStatement("\tmethodChannel.setMethodCallHandler(new " + proxyClassName + "(methodChannel));")
+                .addStatement("}")
+                .end();
+    }
+
+    private static void createHandlerMethod(ClassBuilder clazz, Set<MethodInfo> methodInfos, Set<AsyncMethodInfo> asyncMethodInfos) {
+        MethodBuilder method = clazz.addMethod("onMethodCall").modifier(ClassBuilder.Modifier.PUBLIC).returnType("void")
+                .addArgument("call").type("MethodCall").end()
+                .addArgument("result").type("MethodChannel.Result").end()
+                .addStatement("switch (call.method) {");
+
+        if (methodInfos != null) {
+            for (MethodInfo info : methodInfos) {
+                method.addStatement("\tcase " + info.getMethodName() + ":")
+                        .addStatement("\t\tdelegate." + info.getMethodName() + "(call,result);")
+                        .addStatement("\t\tbreak;");
+            }
         }
-        sb.append(DEFAULT_CASE);
-        String classDefine = HANDLER_TEMPLATE.replaceAll(CLASS_NAME, Matcher.quoteReplacement(proxyClassName))
-                .replaceAll(TARGET_CLASS, classQulifiedName)
-                .replace(INSERT_CHANNEL,needChannel ? "channel" : "")
-                .replace(PLIGIN_NAME,pluginName)
-                .replace(METHOD_CHANNEL_NAME, methodChannelName)
-                .replace(CASE_BLOCK, sb.toString());
 
-        sb.delete(0, sb.length());
-        sb.append("package ");
-        sb.append(proxyClassPath + ";\n");
-        sb.append(IMPORT_METHOD_CALL);
-        sb.append(IMPORT_METHOD_CHANNEL);
-        sb.append(IMPORT_PLUGIN_RRGISTRY);
-        sb.append(classDefine);
+        if (asyncMethodInfos != null) {
+            for (AsyncMethodInfo info : asyncMethodInfos) {
+                method.addStatement("\tcase " + info.getMethodName() + ":")
+                        .addStatement(createAsyncTaskTemple(info))
+                        .addStatement("\t\tbreak;");
+            }
+        }
 
-        return sb.toString();
+        method.addStatement("\tdefault:")
+                .addStatement("\t\tresult.notImplemented();")
+                .addStatement("\t\tbreak;")
+                .addStatement("}");
+    }
+
+
+    private static String createAsyncTaskTemple(AsyncMethodInfo info) {
+        String asyncTask = "\t\tAsyncTask task = new AsyncTask<Void,Void," + (info.getReturnType().isEmpty() ? "Void" : info.getReturnType()) + ">() {\n"
+                + "\t\t\t\t\t\t\t@Override\n"
+                + "\t\t\t\t\t\t\tprotected " + info.getReturnType() + " doInBackground(Void... voids) {\n"
+                + "\t\t\t\t\t\t\t\tMap<String,Object> map = (Map<String,Object>) call.arguments;\n";
+
+        int index = 0;
+        for (ParameterInfo p : info.getParameters()) {
+            asyncTask = asyncTask + "\t\t\t\t\t\t\t\t" + p.getType() + " p" + index + " = (" + p.getType() + ") map.get(\"" + p.getKey() + "\");\n";
+            index++;
+        }
+
+        asyncTask = asyncTask + "\t\t\t\t\t\t\t\tdelegate." + info.getMethodName() + "(";
+        for (int i = 0; i < index; i++) {
+            asyncTask = asyncTask + "p" + i;
+            if (i < index - 1) asyncTask = asyncTask + ",";
+        }
+        asyncTask = asyncTask + ");\n";
+        asyncTask = asyncTask + "\t\t\t\t\t\t\t@Override\n";
+        asyncTask = asyncTask + "\t\t\t\t\t\t\tprotected void onPostExecute(" + info.getReturnType() +" o) {\n";
+        asyncTask = asyncTask + "\t\t\t\t\t\t\t\tif (result != null) result.success(delegate." + info.getCallback() + "(o));\n";
+        asyncTask = asyncTask + "\t\t\t\t\t\t\t}\n";
+        asyncTask = asyncTask + "\t\t\t\t\t\t};\n";
+        asyncTask = asyncTask + "\t\t\t\t\t\ttask.execute();";
+        return asyncTask;
     }
 }
