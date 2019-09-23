@@ -18,7 +18,7 @@ public class DefaultMethodBuilder implements MethodBuilder {
     private List<ArgumentBuilder> mArgumenSet = new ArrayList<>();
     private List<String> mStatementList = new ArrayList<>();
 
-    public DefaultMethodBuilder(ClassBuilder classBuilder) {
+    protected DefaultMethodBuilder(ClassBuilder classBuilder) {
         this.classBuilder = classBuilder;
     }
 
@@ -52,13 +52,6 @@ public class DefaultMethodBuilder implements MethodBuilder {
         return this;
     }
 
-    @Override
-    public ArgumentBuilder addArgument(String name) {
-        ArgumentBuilder argumentBuilder = new DefaultArgumentBuilder(this);
-        argumentBuilder.name(name);
-        mArgumenSet.add(argumentBuilder);
-        return argumentBuilder;
-    }
 
     @Override
     public MethodBuilder addStatement(String stateMent) {
@@ -67,10 +60,13 @@ public class DefaultMethodBuilder implements MethodBuilder {
     }
 
     @Override
-    public MethodBuilder addArgument(ArgumentBuilder argument) {
-        if (argument != null) mArgumenSet.add(argument);
-        return this;
+    public ArgumentBuilder addArgument(String name) {
+        ArgumentBuilder argumentBuilder = new DefaultArgumentBuilder(this);
+        mArgumenSet.add(argumentBuilder);
+        argumentBuilder.name(name);
+        return argumentBuilder;
     }
+
 
     @Override
     public ClassBuilder end() {

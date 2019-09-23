@@ -13,7 +13,7 @@ public class DefaultFieldBuilder implements FieldBuilder {
     private boolean isStatic;
     private ClassBuilder.Modifier mModifier;
 
-    public DefaultFieldBuilder(ClassBuilder classBuilder) {
+    protected DefaultFieldBuilder(ClassBuilder classBuilder) {
         this.classBuilder = classBuilder;
     }
 

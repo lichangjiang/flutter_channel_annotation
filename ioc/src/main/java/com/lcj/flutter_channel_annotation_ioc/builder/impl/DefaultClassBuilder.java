@@ -53,17 +53,6 @@ public class DefaultClassBuilder implements ClassBuilder {
         return this;
     }
 
-    @Override
-    public ClassBuilder addField(FieldBuilder field) {
-        if (field != null) mFieldSet.add(field);
-        return this;
-    }
-
-    @Override
-    public ClassBuilder addMethod(MethodBuilder method) {
-        if (method != null) mMethodSet.add(method);
-        return this;
-    }
 
     @Override
     public FieldBuilder addField(String name) {

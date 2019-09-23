@@ -10,7 +10,7 @@ public class DefaultArgumentBuilder implements ArgumentBuilder {
     private String mType;
     private boolean isFinal;
 
-    public DefaultArgumentBuilder(MethodBuilder methodBuilder) {
+    protected DefaultArgumentBuilder(MethodBuilder methodBuilder) {
         this.methodBuilder = methodBuilder;
     }
 

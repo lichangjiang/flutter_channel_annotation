@@ -7,8 +7,7 @@ public interface MethodBuilder extends Builder{
     MethodBuilder isFinal();
     MethodBuilder isStatic();
     MethodBuilder returnType(String type);
+    MethodBuilder addStatement(String statement);
     ArgumentBuilder addArgument(String name);
-    MethodBuilder addStatement(String stateMent);
-    MethodBuilder addArgument(ArgumentBuilder argument);
     ClassBuilder end();
 }
