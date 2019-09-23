@@ -5,6 +5,7 @@ import com.lcj.example.example.logic.ILoginLogic;
 import com.lcj.example.example.logic.LoginLogicImpl;
 import com.lcj.example.example.logic.UserInfo;
 import com.lcj.flutter_channel.annotation.annotation.AsyncMethodCall;
+import com.lcj.flutter_channel.annotation.annotation.ChannelMethodCall;
 import com.lcj.flutter_channel.annotation.annotation.MethodChannelHandler;
 import com.lcj.flutter_channel.annotation.annotation.Parameter;
 
@@ -12,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.flutter.Log;
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
 
 @MethodChannelHandler(
         pluginName = "com.lcj.example/loginPlugin",
@@ -45,5 +48,14 @@ public class LoginHandler {
         }
         return map;
     }
+
+    /*
+    @ChannelMethodCall
+    //在主线程中，需要自己创建后台处理线程
+    public void doLogin(MethodCall call, MethodChannel.Result result) {
+        //doSomething
+    }
+    */
+
 
 }
