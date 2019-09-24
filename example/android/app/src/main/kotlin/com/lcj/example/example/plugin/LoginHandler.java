@@ -26,9 +26,7 @@ public class LoginHandler {
 
     private ILoginLogic loginLogic = new LoginLogicImpl();
 
-    @AsyncMethodCall(
-            callback = "loginCallback"
-    )
+    @AsyncMethodCall(callback = "loginCallback")
     //在其他线程被调用，使用asyncTask
     public UserInfo doLogin(@Parameter("userName") String userName,@Parameter("password") String pwd) {
         Log.d(TAG,"handle thread:" + Thread.currentThread().getName());
@@ -48,13 +46,10 @@ public class LoginHandler {
         return map;
     }
 
-    /*
-    @ChannelMethodCall
+
+    /*@ChannelMethodCall
     //在主线程中，需要自己创建后台处理线程
     public void doLogin(MethodCall call, MethodChannel.Result result) {
         //doSomething
-    }
-    */
-
-
+    }*/
 }
