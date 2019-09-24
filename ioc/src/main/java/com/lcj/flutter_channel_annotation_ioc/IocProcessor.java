@@ -120,11 +120,13 @@ public class IocProcessor extends AbstractProcessor {
                 } else {
                     //获取AsyncMethodInfo
                     AsyncMethodCall asynCall = methodElement.getAnnotation(AsyncMethodCall.class);
+                    TypeElement returnType = (TypeElement) mTypesUtils.asElement(methodElement.getReturnType());
                     if (asynCall != null) {
                         AsyncMethodInfo asyncMethodInfo = new AsyncMethodInfo(
                                 className,
                                 methodElement.getSimpleName().toString(),
-                                asynCall.returnType(),
+                                //asynCall.returnType(),
+                                returnType.getQualifiedName().toString(),
                                 asynCall.callback()
                         );
                         getAllParameters(asyncMethodInfo,methodElement);

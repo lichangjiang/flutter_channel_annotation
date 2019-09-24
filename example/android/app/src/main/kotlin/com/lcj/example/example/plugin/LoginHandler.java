@@ -27,8 +27,7 @@ public class LoginHandler {
     private ILoginLogic loginLogic = new LoginLogicImpl();
 
     @AsyncMethodCall(
-            callback = "loginCallback",
-            returnType = "com.lcj.example.example.logic.UserInfo"
+            callback = "loginCallback"
     )
     //在其他线程被调用，使用asyncTask
     public UserInfo doLogin(@Parameter("userName") String userName,@Parameter("password") String pwd) {

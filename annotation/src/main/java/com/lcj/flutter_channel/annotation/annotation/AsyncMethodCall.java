@@ -9,5 +9,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface AsyncMethodCall {
     String callback() default "";
-    String returnType() default "";
+    //String returnType() default "";
 }
